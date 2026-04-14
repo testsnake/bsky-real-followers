@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 import { AtpAgent, RichText } from '@atproto/api';
 
-const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 min
+const POLL_INTERVAL_MS = 0.5 * 60 * 1000; // 30 seconds
 
 async function run() {
     const host = process.env.ACCOUNT_HOST || 'https://bsky.social';

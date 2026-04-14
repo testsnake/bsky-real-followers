@@ -125,6 +125,8 @@ async function replyToNotification(agent: AtpAgent, notification: any) {
         createdAt: new Date().toISOString(),
         langs: ['en'],
     });
+    // like the parent post
+    await agent.like(parent.uri, parent.cid);
 
     console.log(`Replied to ${notification.author.handle} (${notification.reason}): ${notification.uri}`);
 }

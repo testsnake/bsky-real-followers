@@ -101,7 +101,7 @@ async function replyToNotification(agent: AtpAgent, notification: any) {
 
     const followers = await countFollowers(agent, targetDid);
 
-    const replyText = `@${notification.author.handle} @${targetHandle} has ${followers} followers that have not been blocked/suspended/deleted.`;
+    const replyText = `@${targetHandle} has ${followers} followers that have not been blocked/suspended/deleted.`;
 
     const rt = new RichText({ text: replyText });
     await rt.detectFacets(agent);

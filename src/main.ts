@@ -34,6 +34,8 @@ async function readFromNotifications(agent: AtpAgent) {
     const handle = profile.data.handle;
 
     let cursor: string | undefined = undefined;
+    let queue = [];
+    let readtime = new Date().toISOString();
     do {
         const res = await agent.listNotifications({
             limit: 100,
@@ -41,6 +43,7 @@ async function readFromNotifications(agent: AtpAgent) {
             reasons: ['mention', 'reply'],
         });
         cursor = res.data.cursor;
+        readtime = new Date().toISOString();
 
         const unread = res.data.notifications.filter((n) => !n.isRead);
 
@@ -62,13 +65,22 @@ async function readFromNotifications(agent: AtpAgent) {
                 if (!mentioned) continue;
             }
 
-            await replyToNotification(agent, notif);
+            console.log(`Queueing notification from ${notif.author.handle}: ${notif.uri}`);
+            queue.push(notif);
         }
 
-        await agent.updateSeenNotifications(new Date().toISOString());
+        await agent.updateSeenNotifications(readtime);
 
         if (unread.length === 0) break;
     } while (cursor);
+
+    for (const notification of queue) {
+        try {
+            await replyToNotification(agent, notification);
+        } catch (err) {
+            console.error('Error replying to notification:', err);
+        }
+    }
 }
 
 async function replyToNotification(agent: AtpAgent, notification: any) {
@@ -101,7 +113,7 @@ async function replyToNotification(agent: AtpAgent, notification: any) {
 
     const followers = await countFollowers(agent, targetDid);
 
-    const replyText = `@${targetHandle} has ${followers} followers that have not been blocked/suspended/deleted.`;
+    const replyText = `@${targetHandle} has ${followers} real followers\n\n(followers that have not been blocked/suspended/deleted)`;
 
     const rt = new RichText({ text: replyText });
     await rt.detectFacets(agent);
@@ -111,6 +123,7 @@ async function replyToNotification(agent: AtpAgent, notification: any) {
         facets: rt.facets,
         reply: { root, parent },
         createdAt: new Date().toISOString(),
+        langs: ['en'],
     });
 
     console.log(`Replied to ${notification.author.handle} (${notification.reason}): ${notification.uri}`);
